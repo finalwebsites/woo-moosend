@@ -32,8 +32,7 @@ class FWS_Woo_Moosend_Integration extends WC_Integration {
 
 		// Actions.
 		add_action( 'woocommerce_update_options_integration_'.$this->id, array( $this, 'process_admin_options' ) );
-        //add_action( 'woocommerce_order_status_processing', array( $this, 'add_to_sendy_mailer' ) );
-        add_action( 'woocommerce_checkout_order_processed', array( $this, 'add_to_moosend_callback' ) );
+  	add_action( 'woocommerce_checkout_order_processed', array( $this, 'add_to_moosend_callback' ) );
 
 	}
 
