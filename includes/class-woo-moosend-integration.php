@@ -17,8 +17,8 @@ class FWS_Woo_Moosend_Integration extends WC_Integration {
 	public function __construct() {
 		global $woocommerce;
 
-		$this->id                 = 'fws-woo-moosend';
-		$this->method_title       = __( 'Moosend Subscription', 'fws-woo-moosend' );
+		$this->id = 'fws-woo-moosend';
+		$this->method_title = __( 'Moosend Subscription', 'fws-woo-moosend' );
 		$this->method_description = __( 'Add buyers to your Moosend Mailing list', 'fws-woo-moosend' );
 
 		// Load the settings.
@@ -26,9 +26,9 @@ class FWS_Woo_Moosend_Integration extends WC_Integration {
 		$this->init_settings();
 
 		// Define user set variables.
-		$this->moosend_api          = $this->get_option( 'moosend_api' );
-		$this->moosend_list        = $this->get_option( 'moosend_list' );
-		$this->moosend_first_name        = $this->get_option( 'moosend_first_name' );
+		$this->moosend_api = $this->get_option( 'moosend_api' );
+		$this->moosend_list = $this->get_option( 'moosend_list' );
+		$this->moosend_first_name = $this->get_option( 'moosend_first_name' );
 
 		// Actions.
 		add_action( 'woocommerce_update_options_integration_'.$this->id, array( $this, 'process_admin_options' ) );
@@ -37,12 +37,6 @@ class FWS_Woo_Moosend_Integration extends WC_Integration {
 
 	}
 
-
-	/**
-	 * Initialize integration settings form fields.
-	 *
-	 * @return void
-	 */
 	public function init_form_fields() {
 		$this->form_fields = array(
 			'moosend_api' => array(
