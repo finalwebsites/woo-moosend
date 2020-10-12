@@ -77,50 +77,38 @@ class FWS_Woo_Moosend_Integration extends WC_Integration {
 	}
 
 	public function add_to_moosend_callback( $order_id) {
-		global $woocommerce;
 		$order = new WC_Order($order_id);
-		$checkout_url = $woocommerce->cart->get_checkout_url();
 		$subscribed = get_post_meta($order_id, 'moosend_subscribed', true);
-		if ($list != '') {
-			$result = $this->create_moosend_request($order, $subscribed, $checkout_url);
-			if ($result == 1) {
-				$order->add_order_note( $order->billing_email.' added to the mailing list');
-			} elseif ($result == 'Already subscribed.') {
-				$order->add_order_note('Customer '. $order->billing_email.' was already subscribed to the mailing list');
+		if ($this->moosend_list != '') {
+			if ($result->Code == 0) {
+				$result = $this->create_moosend_request($order, $subscribed);
+				if (empty($result->Context->UpdatedOn)) {
+					$order->add_order_note( $order->billing_email.' added to the mailing list');
+				} else {
+					$order->add_order_note('Customer '. $order->billing_email.' was already subscribed to the mailing list');
+				}
 			} else {
 				$order->add_order_note('Failed to add '. $order->billing_email.' to the mailing list');
 			}
 		}
 	}
 
-	public function create_moosend_request($order, $subscribed, $checkout_url) {
-		$url = 'https://api.moosend.com/v3';
-		$list = $this->moosend_list;
-		$api_key = $this->moosend_api;
-		$qs_values = '';
-		$endpoint = 'subscribers';
+	public function create_moosend_request($order, $subscribed) {
+		$url = 'https://api.moosend.com/v3/'.$this->moosend_list.'/subscribers.json?apikey='.$this->moosend_api;
 		if ($this->moosend_first_name != '') {
 			$post_array = array(
 				'Name' => $order->billing_last_name,
-				$this->moosend_first_name => $order->billing_first_name
+				'CustomFields' => array(
+					$this->moosend_first_name => $order->billing_first_name
+				)
 			);
 		} else {
 			$post_array = array(
 			'Name' => $order->billing_first_name.' '.$order->billing_last_name
 		);
-		
-			'Email' => $order->billing_email,
-			'Ipaddress' => $this->get_client_ip(),
-			'Referrer' => $checkout_url,
-			'HasExternalDoubleOptIn' => 'true'
-		);
+		$post_array['Email'] = $order->billing_email;
+		if ($subscribed) $post_array['HasExternalDoubleOptIn'] = 'true';
 		$ch = curl_init();
-		$url .= '/'.$endpoint;
-		if ($list != '') $url .= '/'.$list;
-		if ($action != '') $url .= '/'.$action;
-		$url .= '.json?apikey='.$api_key;
-		if ($qs_values != '') $url .= $qs_values;
-
 		curl_setopt($ch, CURLOPT_URL, $url);
 		if (!empty($post_array)) {
 			$postdata = http_build_query($post_array);
@@ -135,6 +123,7 @@ class FWS_Woo_Moosend_Integration extends WC_Integration {
 		$result = json_decode($raw);
 		return $result;
 	}
+
 	public function get_client_ip() {
 		foreach (array('HTTP_CLIENT_IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_X_FORWARDED', 'HTTP_X_CLUSTER_CLIENT_IP', 'HTTP_FORWARDED_FOR', 'HTTP_FORWARDED', 'REMOTE_ADDR') as $key){
 			if (array_key_exists($key, $_SERVER) === true){
@@ -148,13 +137,8 @@ class FWS_Woo_Moosend_Integration extends WC_Integration {
 			}
 		}
 	}
-	/**
-	 * Santize our settings
-	 * @see process_admin_options()
-	 */
-	public function sanitize_settings( $settings ) {
 
+	public function sanitize_settings( $settings ) {
 		return $settings;
 	}
-
 }
