@@ -62,7 +62,7 @@ class FWS_Woo_Moosend {
 	}
 
 	function fws_checkout_order_meta( $order_id ) {
-		if ($_POST['fws_moosend_checkbox']) update_post_meta( $order_id, 'sendy_subscribed', esc_attr($_POST['fws_moosend_checkbox']));
+		if (!empty($_POST['fws_moosend_checkbox'])) update_post_meta( $order_id, 'moosend_subscribed', esc_attr($_POST['fws_moosend_checkbox']));
 	}
 
 }

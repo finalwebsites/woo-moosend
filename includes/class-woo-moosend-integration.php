@@ -15,7 +15,6 @@ class FWS_Woo_Moosend_Integration extends WC_Integration {
 	 * Init and hook in the integration.
 	 */
 	public function __construct() {
-		global $woocommerce;
 
 		$this->id = 'fws-woo-moosend';
 		$this->method_title = __( 'Moosend Subscription', 'fws-woo-moosend' );
@@ -73,47 +72,45 @@ class FWS_Woo_Moosend_Integration extends WC_Integration {
 		$order = new WC_Order($order_id);
 		$subscribed = get_post_meta($order_id, 'moosend_subscribed', true);
 		if ($this->moosend_list != '') {
-			if ($result->Code == 0) {
-				$result = $this->create_moosend_request($order, $subscribed);
+			$result = $this->create_moosend_request($order, $subscribed);
+			if (isset($result->Code) && $result->Code == 0) {
 				if (empty($result->Context->UpdatedOn)) {
-					$order->add_order_note( $order->billing_email.' added to the mailing list');
+					$order->add_order_note( $order->get_billing_email().' added to the mailing list');
 				} else {
-					$order->add_order_note('Customer '. $order->billing_email.' was already subscribed to the mailing list');
+					$order->add_order_note('Customer '. $order->get_billing_email().' was already subscribed to the mailing list');
 				}
 			} else {
-				$order->add_order_note('Failed to add '. $order->billing_email.' to the mailing list');
+				$order->add_order_note('Failed to add '. $order->get_billing_email().' to the mailing list');
 			}
 		}
 	}
 
 	public function create_moosend_request($order, $subscribed) {
-		$url = 'https://api.moosend.com/v3/'.$this->moosend_list.'/subscribers.json?apikey='.$this->moosend_api;
+		$url = 'https://api.moosend.com/v3/subscribers/'.$this->moosend_list.'/subscribe.json?apikey='.$this->moosend_api;
 		if ($this->moosend_first_name != '') {
 			$post_array = array(
-				'Name' => $order->billing_last_name,
+				'Name' => $order->get_billing_last_name(),
 				'CustomFields' => array(
-					$this->moosend_first_name => $order->billing_first_name
+					$this->moosend_first_name.'='.$order->get_billing_first_name()
 				)
 			);
 		} else {
 			$post_array = array(
-			'Name' => $order->billing_first_name.' '.$order->billing_last_name
-		);
-		$post_array['Email'] = $order->billing_email;
-		if ($subscribed) $post_array['HasExternalDoubleOptIn'] = 'true';
-		$ch = curl_init();
-		curl_setopt($ch, CURLOPT_URL, $url);
-		if (!empty($post_array)) {
-			$postdata = http_build_query($post_array);
-			curl_setopt($ch,CURLOPT_POST, 1);
-			curl_setopt($ch, CURLOPT_POSTFIELDS, $postdata);
+				'Name' => $order->get_billing_first_name().' '.$order->get_billing_last_name()
+			);
 		}
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-			'Content-type: application/x-www-form-urlencoded'
-		));
-		$raw = curl_exec($ch);
-		$result = json_decode($raw);
+		$post_array['Email'] = $order->get_billing_email();
+		if ($subscribed) $post_array['HasExternalDoubleOptIn'] = 'true';
+		error_log(json_encode($post_array, JSON_PRETTY_PRINT));
+	 	$response = wp_remote_post(
+			$url,
+			array(
+				'headers' => array('Content-Type' => 'application/json', 'accept' => 'application/json'),
+				'body' => json_encode($post_array, JSON_PRETTY_PRINT),
+			)
+		);
+		$result = json_decode($response['body']);
+		error_log(print_r($response['body'], true));
 		return $result;
 	}
 
