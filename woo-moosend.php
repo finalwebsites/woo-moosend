@@ -7,6 +7,8 @@ Version: 1.0
 
 
 */
+define('WC2MOO_DIR', plugin_dir_path( __FILE__ ));
+
 if ( ! defined( 'ABSPATH' ) ) {
     exit; // Exit if accessed directly
 }
@@ -29,7 +31,7 @@ class FWS_Woo_Moosend {
 		// Checks if WooCommerce is installed.
 		if ( class_exists( 'WC_Integration' ) ) {
 			// Include our integration class.
-			include_once WP_PLUGIN_DIR . '/woo-moosend/includes/class-woo-moosend-integration.php';
+			include_once WC2MOO_DIR . 'includes/class-woo-moosend-integration.php';
 
 			// Register the integration.
 			add_filter( 'woocommerce_integrations', array( $this, 'fws_add_integration' ) );
