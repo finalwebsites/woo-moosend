@@ -28,6 +28,7 @@ class FWS_Woo_Moosend_Integration extends WC_Integration {
 		$this->moosend_api = $this->get_option( 'moosend_api' );
 		$this->moosend_list = $this->get_option( 'moosend_list' );
 		$this->moosend_first_name = $this->get_option( 'moosend_first_name' );
+		$this->moosend_webshop = $this->get_option( 'moosend_webshop' );
 
 		// Actions.
 		add_action( 'woocommerce_update_options_integration_'.$this->id, array( $this, 'process_admin_options' ) );
@@ -52,18 +53,25 @@ class FWS_Woo_Moosend_Integration extends WC_Integration {
 				'description'       => __( 'The hashed ID of your Moosend mailing list', 'fws-woo-moosend' ),
 			),
 			'moosend_first_name' => array(
-				'title'             => __( 'Custom field for "first name"', 'fws-woo-moosend' ),
+				'title'             => __( 'Custom field ID "first name"', 'fws-woo-moosend' ),
 				'type'              => 'text',
 				'default'           => '',
-				'desc_tip'          => true,
-				'description'       => __( 'Enter hier the field ID for the first. Keep the field empty to disabled this option.', 'fws-woo-moosend' ),
+				'desc_tip'          => false,
+				'description'       => __( 'Enter here the field ID for the first name. Keep the field empty to disable this option.', 'fws-woo-moosend' ),
+			),
+			'moosend_webshop' => array(
+				'title'             => __( 'Optional name for Custom field "Webshop"', 'fws-woo-moosend' ),
+				'type'              => 'text',
+				'default'           => '',
+				'desc_tip'          => false,
+				'description'       => __( 'First create a custom field with the name "Webshop" in Moosend. Than enter here the webshop name. This is useful if you use the same mailing list for multiple shops. Keep the field empty to disable this option.', 'fws-woo-moosend' ),
 			),
 			'moosend_subscribe_text' => array(
 				'title'             => __( 'Text for newsletter subscription', 'fws-woo-moosend' ),
 				'type'              => 'text',
 				'default'           => '',
 				'desc_tip'          => true,
-				'description'       => __( 'The text for the subscription on the checkout page.', 'fws-woo-moosend' ),
+				'description'       => __( 'The text for the subscription checkbox on your checkout page.', 'fws-woo-moosend' ),
 			)
 		);
 	}
@@ -99,6 +107,13 @@ class FWS_Woo_Moosend_Integration extends WC_Integration {
 				'Name' => $order->get_billing_first_name().' '.$order->get_billing_last_name()
 			);
 		}
+		if ($this->moosend_webshop != '') {
+			$post_array = array(
+				'CustomFields' => array(
+					'Webshop='.$this->moosend_webshop
+				)
+			);
+		}
 		$post_array['Email'] = $order->get_billing_email();
 		if ($subscribed) $post_array['HasExternalDoubleOptIn'] = 'true';
 		error_log(json_encode($post_array, JSON_PRETTY_PRINT));
@@ -127,6 +142,7 @@ class FWS_Woo_Moosend_Integration extends WC_Integration {
 			}
 		}
 	}
+
 
 	public function sanitize_settings( $settings ) {
 		return $settings;
